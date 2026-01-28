@@ -21,11 +21,40 @@ const PH_LOW = 6.0;
 const PH_HIGH = 8.0;
 const DO_LOW = 3.0; // mg/L 미만 경고(원하면 4.0으로 조정)
 
+// 탭 스타일
+const tabContainerStyle = {
+    display: 'flex',
+    borderBottom: '2px solid #ddd',
+    marginBottom: '20px',
+};
+
+const tabStyle = {
+    padding: '12px 24px',
+    cursor: 'pointer',
+    border: 'none',
+    background: 'none',
+    fontSize: '16px',
+    fontWeight: '500',
+    color: '#666',
+    borderBottom: '3px solid transparent',
+    transition: 'all 0.2s ease',
+};
+
+const activeTabStyle = {
+    ...tabStyle,
+    color: '#007bff',
+    borderBottom: '3px solid #007bff',
+    fontWeight: '600',
+};
+
 const Dashboard = () => {
     const [temperature, setTemperature] = useState(null);
     const [humidity, setHumidity] = useState(null);
     const [ph, setPh] = useState(null);
     const [doValue, setDoValue] = useState(null);
+
+    // 현재 선택된 탭
+    const [activeTab, setActiveTab] = useState('data');
 
     // 차트/카드 리프레시 트리거 (증가시키면 자식들이 재요청)
     const [refreshTick, setRefreshTick] = useState(0);
@@ -130,33 +159,68 @@ const Dashboard = () => {
                 />
             ))}
 
-            {/* 상단 카드들 */}
-            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                <SensorCard type="temperature" label="온도" refreshKey={refreshTick} />
-                <SensorCard type="humidity" label="습도" refreshKey={refreshTick} />
-                <SensorCard type="ph" label="pH" refreshKey={refreshTick} />
-                <SensorCard type="do" label="DO" refreshKey={refreshTick} />
+            {/* 탭 메뉴 */}
+            <div style={tabContainerStyle}>
+                <button
+                    style={activeTab === 'data' ? activeTabStyle : tabStyle}
+                    onClick={() => setActiveTab('data')}
+                >
+                    데이터
+                </button>
+                <button
+                    style={activeTab === 'yolo' ? activeTabStyle : tabStyle}
+                    onClick={() => setActiveTab('yolo')}
+                >
+                    YOLO 감지 결과
+                </button>
+                <button
+                    style={activeTab === 'control' ? activeTabStyle : tabStyle}
+                    onClick={() => setActiveTab('control')}
+                >
+                    제어 패널
+                </button>
             </div>
 
-            {/* 차트 + 표(오른쪽) */}
-            <SensorChartWithTable title="온도" api="temperature" unit="°C" refreshKey={refreshTick} />
-            <SensorChartWithTable title="습도" api="humidity" unit="%" refreshKey={refreshTick} />
-            <SensorChartWithTable title="pH" api="ph" unit="pH" refreshKey={refreshTick} />
-            <SensorChartWithTable title="DO" api="do" unit="mg/L" refreshKey={refreshTick} />
+            {/* 데이터 탭 */}
+            {activeTab === 'data' && (
+                <div>
+                    {/* 상단 카드들 */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        <SensorCard type="temperature" label="온도" refreshKey={refreshTick} />
+                        <SensorCard type="humidity" label="습도" refreshKey={refreshTick} />
+                        <SensorCard type="ph" label="pH" refreshKey={refreshTick} />
+                        <SensorCard type="do" label="DO" refreshKey={refreshTick} />
+                    </div>
 
-            {/* 기타 섹션 */}
-            <YoloImage refreshInterval={3000} />
+                    {/* 차트 + 표(오른쪽) */}
+                    <SensorChartWithTable title="온도" api="temperature" unit="°C" refreshKey={refreshTick} />
+                    <SensorChartWithTable title="습도" api="humidity" unit="%" refreshKey={refreshTick} />
+                    <SensorChartWithTable title="pH" api="ph" unit="pH" refreshKey={refreshTick} />
+                    <SensorChartWithTable title="DO" api="do" unit="mg/L" refreshKey={refreshTick} />
+                </div>
+            )}
 
-            <h2>제어 패널</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                <DeviceControl label="펌프" onToggle={handleDeviceToggle} />
-                <DeviceControl label="LED" onToggle={handleDeviceToggle} />
-                <DeviceControl label="에어펌프" onToggle={handleDeviceToggle} />
-            </div>
+            {/* YOLO 감지 결과 탭 */}
+            {activeTab === 'yolo' && (
+                <div>
+                    <YoloImage refreshInterval={3000} />
+                    <YoloOverlayImage />
+                    <FishOverlayImage />
+                    <SmartAlertOverlay />
+                </div>
+            )}
 
-            <YoloOverlayImage />
-            <FishOverlayImage />
-            <SmartAlertOverlay />
+            {/* 제어 패널 탭 */}
+            {activeTab === 'control' && (
+                <div>
+                    <h2>제어 패널</h2>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        <DeviceControl label="펌프" onToggle={handleDeviceToggle} />
+                        <DeviceControl label="LED" onToggle={handleDeviceToggle} />
+                        <DeviceControl label="에어펌프" onToggle={handleDeviceToggle} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
